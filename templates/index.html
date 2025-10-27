@@ -1,0 +1,667 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TensorFlow Recommendation System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .model-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2196f3;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196f3;
+            margin: 10px 0;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .metric-source {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .search-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .search-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        input[type="number"] {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 250px;
+            max-width: 100%;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .recommendation-block {
+            background: white;
+            border-left: 5px solid #007bff;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .block-title {
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+        .precision-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #17a2b8;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .item-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .item-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-id {
+            font-weight: bold;
+            color: #333;
+        }
+        .similarity {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .success {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .metrics-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .metrics-details summary {
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .quality-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .quality-excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+        .quality-good {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .quality-poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .classifier-info {
+            background: #d1ecf1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .search-tips {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 TensorFlow Recommendation System</h1>
+            <p>Система рекомендаций на основе обученной модели TensorFlow</p>
+        </div>
+
+        <div class="model-info">
+            <h3>🤖 Информация о моделях</h3>
+
+            <div class="classifier-info">
+                <h4>📊 Модель классификации TensorFlow</h4>
+                <div class="metrics-grid" id="classifierMetrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Precision модели</div>
+                        <div class="metric-value" id="classifierPrecision">0%</div>
+                        <div class="metric-source" id="classifierPrecisionSource">загрузка...</div>
+                        <div id="classifierQualityIndicator" class="quality-indicator">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Accuracy</div>
+                        <div class="metric-value" id="classifierAccuracy">0%</div>
+                        <div class="metric-source">на тестовых данных</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">F1-Score</div>
+                        <div class="metric-value" id="classifierF1">0%</div>
+                        <div class="metric-source">взвешенный</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Статус</div>
+                        <div class="metric-value" id="classifierStatus">-</div>
+                        <div class="metric-source">классификатор</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-card">
+                    <div class="metric-label">Precision рекомендаций</div>
+                    <div class="metric-value" id="modelPrecision">0%</div>
+                    <div class="metric-source" id="precisionSource">загрузка...</div>
+                    <div id="qualityIndicator" class="quality-indicator">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Товаров в базе</div>
+                    <div class="metric-value" id="totalItems">0</div>
+                    <div class="metric-source">из data/result_df_analysis.csv</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Статус системы</div>
+                    <div class="metric-value" id="modelStatus">-</div>
+                    <div class="metric-source" id="modelTimestamp">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Размерность эмбеддингов</div>
+                    <div class="metric-value" id="embeddingDim">0</div>
+                    <div class="metric-source">признаков на товар</div>
+                </div>
+            </div>
+
+            <details class="metrics-details">
+                <summary>📊 Детальная информация о метриках классификации</summary>
+                <div id="detailedMetrics">
+                    <p>Загрузка дополнительной информации о модели...</p>
+                </div>
+            </details>
+        </div>
+
+        <div class="search-section">
+            <h3>🔍 Поиск рекомендаций по товару</h3>
+            <p>Введите код товара для получения 10 наиболее похожих товаров</p>
+
+            <div class="search-tips">
+                <strong>💡 Подсказка:</strong> В базе данных <span id="totalItemsText">0</span> товаров. 
+                Для тестирования используйте существующие ID товаров.
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="itemId" placeholder="Введите код товара" min="1" required>
+                <button onclick="getRecommendations()" id="searchButton">Найти рекомендации</button>
+            </div>
+            <button onclick="checkItem()" style="background: #6c757d; margin-top: 10px;">Проверить наличие товара</button>
+
+            <p><small>💡 Precision модели классификации: <span id="currentClassifierPrecisionText">загрузка...</span></small></p>
+            <p><small>💡 Precision системы рекомендаций: <span id="currentPrecisionText">загрузка...</span></small></p>
+        </div>
+
+        <div id="loading" class="loading">
+            <p>⏳ Анализируем товар и ищем рекомендации... Пожалуйста, подождите.</p>
+        </div>
+
+        <div id="results" class="results">
+            <!-- Результаты будут отображаться здесь -->
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные для хранения метрик
+        let currentClassifierPrecision = 0;
+        let currentClassifierAccuracy = 0;
+        let currentClassifierF1 = 0;
+        let currentRecommendationPrecision = 0;
+
+        // Загрузка информации о модели при старте
+        async function loadModelInfo() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                // Обновляем основную информацию
+                updateModelInfo(data);
+
+                // Загружаем детальные метрики классификации
+                await loadClassifierMetrics();
+
+            } catch (error) {
+                console.error('Ошибка загрузки информации о модели:', error);
+                document.getElementById('modelStatus').textContent = '❌ Ошибка загрузки';
+            }
+        }
+
+        function updateModelInfo(data) {
+            // Метрики классификатора
+            currentClassifierPrecision = data.classifier_precision || 0;
+            currentClassifierAccuracy = data.classifier_accuracy || 0;
+            currentClassifierF1 = data.classifier_f1_score || 0;
+
+            const classifierPrecisionPercent = (currentClassifierPrecision * 100).toFixed(1);
+            const classifierAccuracyPercent = (currentClassifierAccuracy * 100).toFixed(1);
+            const classifierF1Percent = (currentClassifierF1 * 100).toFixed(1);
+
+            document.getElementById('classifierPrecision').textContent = classifierPrecisionPercent + '%';
+            document.getElementById('classifierAccuracy').textContent = classifierAccuracyPercent + '%';
+            document.getElementById('classifierF1').textContent = classifierF1Percent + '%';
+            document.getElementById('classifierStatus').textContent = data.classification_model_loaded ? '✅ Активна' : '❌ Не загружена';
+
+            updateClassifierQualityIndicator(currentClassifierPrecision);
+
+            // Метрики рекомендательной системы
+            currentRecommendationPrecision = data.recommendation_precision || 0;
+            const recommendationPrecisionPercent = (currentRecommendationPrecision * 100).toFixed(1);
+
+            document.getElementById('modelPrecision').textContent = recommendationPrecisionPercent + '%';
+            document.getElementById('totalItems').textContent = data.total_items?.toLocaleString() || '0';
+            document.getElementById('totalItemsText').textContent = data.total_items?.toLocaleString() || '0';
+            document.getElementById('modelStatus').textContent = data.recommendation_model_loaded ? '✅ Активна' : '❌ Ошибка';
+            document.getElementById('embeddingDim').textContent = data.embedding_dimension || '50';
+
+            // Обновляем индикаторы качества
+            updateQualityIndicator(currentRecommendationPrecision);
+
+            // Обновляем текст в поисковом разделе
+            document.getElementById('currentClassifierPrecisionText').textContent = 
+                `${classifierPrecisionPercent}% (${getPrecisionDescription(currentClassifierPrecision)})`;
+            document.getElementById('currentPrecisionText').textContent = 
+                `${recommendationPrecisionPercent}% (${getPrecisionDescription(currentRecommendationPrecision)})`;
+
+            // Время загрузки модели
+            if (data.timestamp) {
+                const date = new Date(data.timestamp);
+                document.getElementById('modelTimestamp').textContent = 
+                    'обновлено: ' + date.toLocaleTimeString();
+            }
+        }
+
+        function updateClassifierQualityIndicator(precision) {
+            const indicator = document.getElementById('classifierQualityIndicator');
+            indicator.textContent = '';
+            indicator.className = 'quality-indicator';
+
+            if (precision >= 0.9) {
+                indicator.textContent = 'ОТЛИЧНО';
+                indicator.classList.add('quality-excellent');
+            } else if (precision >= 0.7) {
+                indicator.textContent = 'ХОРОШО';
+                indicator.classList.add('quality-good');
+            } else if (precision >= 0.5) {
+                indicator.textContent = 'УДОВЛЕТВОРИТЕЛЬНО';
+                indicator.classList.add('quality-good');
+            } else {
+                indicator.textContent = 'ТРЕБУЕТ НАСТРОЙКИ';
+                indicator.classList.add('quality-poor');
+            }
+        }
+
+        function updateQualityIndicator(precision) {
+            const indicator = document.getElementById('qualityIndicator');
+            indicator.textContent = '';
+            indicator.className = 'quality-indicator';
+
+            if (precision >= 0.9) {
+                indicator.textContent = 'ОТЛИЧНО';
+                indicator.classList.add('quality-excellent');
+            } else if (precision >= 0.7) {
+                indicator.textContent = 'ХОРОШО';
+                indicator.classList.add('quality-good');
+            } else if (precision >= 0.5) {
+                indicator.textContent = 'УДОВЛЕТВОРИТЕЛЬНО';
+                indicator.classList.add('quality-good');
+            } else {
+                indicator.textContent = 'ТРЕБУЕТ НАСТРОЙКИ';
+                indicator.classList.add('quality-poor');
+            }
+        }
+
+        function getPrecisionDescription(precision) {
+            if (precision >= 0.9) return 'отличное качество';
+            if (precision >= 0.7) return 'хорошее качество';
+            if (precision >= 0.5) return 'удовлетворительное качество';
+            return 'требует улучшения';
+        }
+
+        async function loadClassifierMetrics() {
+            try {
+                const response = await fetch('/api/model/metrics');
+                const data = await response.json();
+
+                let detailsHtml = '';
+
+                if (data.status === 'success' && data.metrics) {
+                    const metrics = data.metrics;
+
+                    detailsHtml += `<p><strong>Основные метрики классификации:</strong></p>`;
+                    detailsHtml += `<ul>`;
+                    if (metrics.test_precision !== undefined) {
+                        detailsHtml += `<li><strong>Precision:</strong> ${(metrics.test_precision * 100).toFixed(2)}%</li>`;
+                    }
+                    if (metrics.test_accuracy !== undefined) {
+                        detailsHtml += `<li><strong>Accuracy:</strong> ${(metrics.test_accuracy * 100).toFixed(2)}%</li>`;
+                    }
+                    if (metrics.test_recall !== undefined) {
+                        detailsHtml += `<li><strong>Recall:</strong> ${(metrics.test_recall * 100).toFixed(2)}%</li>`;
+                    }
+                    if (metrics.test_f1_score !== undefined) {
+                        detailsHtml += `<li><strong>F1-Score:</strong> ${(metrics.test_f1_score * 100).toFixed(2)}%</li>`;
+                    }
+                    if (metrics.test_auc !== undefined) {
+                        detailsHtml += `<li><strong>AUC:</strong> ${(metrics.test_auc * 100).toFixed(2)}%</li>`;
+                    }
+                    detailsHtml += `</ul>`;
+
+                    if (metrics.classification_report) {
+                        detailsHtml += `<p><strong>Classification Report:</strong></p>`;
+                        detailsHtml += `<pre style="font-size: 12px; background: white; padding: 10px; border-radius: 5px; overflow-x: auto;">${JSON.stringify(metrics.classification_report, null, 2)}</pre>`;
+                    }
+
+                } else {
+                    detailsHtml = '<p>Не удалось загрузить детальные метрики классификации</p>';
+                }
+
+                document.getElementById('detailedMetrics').innerHTML = detailsHtml;
+
+            } catch (error) {
+                console.error('Ошибка загрузки детальных метрик классификации:', error);
+                document.getElementById('detailedMetrics').innerHTML = 
+                    '<p>Не удалось загрузить детальную информацию о метриках классификации</p>';
+            }
+        }
+
+        async function checkItem() {
+            const itemId = document.getElementById('itemId').value;
+            if (!itemId) {
+                alert('Пожалуйста, введите код товара');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/items/search?item_id=${itemId}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    if (data.item_found) {
+                        alert(`✅ Товар ${itemId} найден в базе данных!`);
+                    } else {
+                        alert(`❌ Товар ${itemId} не найден в базе данных.`);
+                    }
+                } else {
+                    alert('Ошибка при проверке товара: ' + (data.error || 'неизвестная ошибка'));
+                }
+            } catch (error) {
+                alert('Ошибка соединения: ' + error.message);
+            }
+        }
+
+        async function getRecommendations() {
+            const itemId = document.getElementById('itemId').value;
+            const searchButton = document.getElementById('searchButton');
+
+            if (!itemId) {
+                alert('Пожалуйста, введите код товара');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+
+            // Блокируем кнопку на время поиска
+            searchButton.disabled = true;
+            searchButton.textContent = 'Поиск...';
+
+            loading.style.display = 'block';
+            results.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/recommend/item', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        item_id: parseInt(itemId),
+                        top_k: 10
+                    })
+                });
+
+                const data = await response.json();
+
+                loading.style.display = 'none';
+                searchButton.disabled = false;
+                searchButton.textContent = 'Найти рекомендации';
+
+                if (data.status === 'success') {
+                    displayRecommendations(data);
+                } else {
+                    results.innerHTML = `<div class="error">❌ Ошибка: ${data.message}</div>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                searchButton.disabled = false;
+                searchButton.textContent = 'Найти рекомендации';
+                results.innerHTML = `<div class="error">❌ Ошибка соединения: ${error.message}</div>`;
+            }
+        }
+
+        function displayRecommendations(data) {
+            const results = document.getElementById('results');
+
+            const precisionPercent = (data.precision * 100).toFixed(1);
+            const classifierPrecisionPercent = (currentClassifierPrecision * 100).toFixed(1);
+            const recommendationPrecisionPercent = (currentRecommendationPrecision * 100).toFixed(1);
+
+            let html = `<div class="success">
+                <h3>✅ Рекомендации найдены!</h3>
+                <p>Для товара <strong>${data.item_id}</strong> найдено ${data.total_recommendations} рекомендаций</p>
+                <p><strong>Всего товаров в базе:</strong> ${data.total_items_in_database?.toLocaleString() || 'N/A'}</p>
+                <p><strong>Precision модели классификации:</strong> ${classifierPrecisionPercent}% (${getPrecisionDescription(currentClassifierPrecision)})</p>
+                <p><strong>Precision системы рекомендаций:</strong> ${recommendationPrecisionPercent}% (${getPrecisionDescription(currentRecommendationPrecision)})</p>
+            </div>`;
+
+            html += `<div class="recommendation-block">
+                <div class="precision-badge">Precision: ${precisionPercent}%</div>
+                <div class="block-title">🎯 Рекомендуемые товары</div>
+                <div class="item-list">`;
+
+            data.recommendations.forEach((rec, index) => {
+                const similarityPercent = (rec.similarity * 100).toFixed(1);
+                const itemPrecision = (rec.precision * 100).toFixed(1);
+                html += `
+                <div class="item-card">
+                    <div class="item-id">${index + 1}. Товар #${rec.item_id}</div>
+                    <div class="similarity">
+                        Схожесть: ${similarityPercent}% 
+                        <span style="color: #6c757d; font-size: 12px;">(precision: ${itemPrecision}%)</span>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div></div>`;
+
+            // Добавляем статистику
+            const avgSimilarity = data.recommendations.reduce((sum, rec) => sum + rec.similarity, 0) / data.recommendations.length;
+            html += `
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">${data.total_recommendations}</div>
+                    <div class="stat-label">Всего рекомендаций</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${classifierPrecisionPercent}%</div>
+                    <div class="stat-label">Точность классификации</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${(avgSimilarity * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Средняя схожесть</div>
+                </div>
+            </div>`;
+
+            results.innerHTML = html;
+        }
+
+        // Обработка нажатия Enter в поле ввода
+        document.getElementById('itemId').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                getRecommendations();
+            }
+        });
+
+        // Периодическое обновление информации о модели (каждые 30 секунд)
+        setInterval(loadModelInfo, 30000);
+
+        // Загружаем информацию о модели при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadModelInfo();
+        });
+    </script>
+</body>
+</html>
+    
