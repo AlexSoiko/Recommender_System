@@ -151,7 +151,7 @@ Dense(3, softmax) → [rare, periodic, loyal]
 DATA_PATH=data/result_df_analysis.csv
 MODEL_PATH=models/product_classifier.h5
 
-# Настройки Flask
+#### Настройки Flask
 FLASK_HOST=127.0.0.1
 FLASK_PORT=5000
 FLASK_DEBUG=True
@@ -177,10 +177,10 @@ MODEL_PARAMS = {
 
 ### В Docker
 
-# сборка образа
+#### сборка образа
 docker build -t recommendation-system .
 
-# запуск контейнера 
+#### запуск контейнера 
 docker run -d \
   -p 5000:5000 \
   -v $(pwd)/data:/app/data \
@@ -188,7 +188,7 @@ docker run -d \
   --name rec-system \
   recommendation-system
 
-# Docker Compose
+#### Docker Compose
 version: '3.8'
 services:
   recommendation-service:
