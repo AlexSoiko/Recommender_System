@@ -14,6 +14,7 @@ COPY api/ ./api/
 COPY models/ ./models/
 COPY data/ ./data/
 COPY templates/ ./templates/
+COPY static/ ./static/
 
 RUN mkdir -p static logs
 
